@@ -1,0 +1,36 @@
+{
+  "rules": [
+    {
+      "tier": "opus",
+      "keywords": [
+        "architecture", "synthesis", "synthesize", "hard reasoning",
+        "ambiguous tradeoff", "deep reason", "council", "consequential",
+        "hard-to-reverse", "strategy", "irreversible"
+      ]
+    },
+    {
+      "tier": "kimi",
+      "keywords": [
+        "long-horizon", "multi-step coding", "tool-heavy", "large refactor",
+        "repo-wide", "bulk edit", "extensive rewrite"
+      ]
+    },
+    {
+      "tier": "haiku",
+      "keywords": [
+        "scan", "checklist", "lookup", "classif", "risk audit", "narrow",
+        "simple check", "quick check", "high-volume", "repetitive",
+        "grep", "find files"
+      ]
+    },
+    {
+      "tier": "fable",
+      "keywords": [
+        "creative writing", "writing voice", "copywriting", "narrative",
+        "prose style", "fiction"
+      ]
+    }
+  ],
+  "default": "sonnet",
+  "note": "Static/heuristic only, per council decision 2026-07-28. No learning yet -- that needs eventlog usage data first. Keyword match against subagent_type + description; first rule with a hit wins. No match = no recommendation, on purpose, to avoid noisy false positives. Never blocks -- fail-open by design. Updated 2026-07-31 for the full free/local-first cascade (custom -> local -> groq -> kimi -> Claude, see CLAUDE.md): added a 'kimi' tier for long-horizon/multi-step/tool-heavy coding work that doesn't need Claude's judgment specifically -- enforced as a soft nudge only (never a deny), since Kimi is China-hosted and needs a human sensitivity check before non-Claude-required work is shelled out to it. The 'haiku' tier keywords above are the ones localmodel/enforce-hook.js hard-denies and redirects to the free local cascade (custom tier first for coding-flavored work, then fast/code/reasoning/balanced) -- 'custom' has no keyword rule of its own here because it's a *preference within* the local cascade, not a separate task-shape classification."
+}

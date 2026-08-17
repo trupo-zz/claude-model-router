@@ -1,0 +1,4 @@
+*.jsonl
+*.db
+*.zip
+node_modules/
