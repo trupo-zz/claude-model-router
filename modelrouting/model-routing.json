@@ -4,7 +4,7 @@
       "tier": "opus",
       "keywords": [
         "architecture", "synthesis", "synthesize", "hard reasoning",
-        "ambiguous tradeoff", "deep reason", "council", "consequential",
+        "ambiguous tradeoff", "deep reason", "consequential",
         "hard-to-reverse", "strategy", "irreversible"
       ]
     },
@@ -12,7 +12,9 @@
       "tier": "kimi",
       "keywords": [
         "long-horizon", "multi-step coding", "tool-heavy", "large refactor",
-        "repo-wide", "bulk edit", "extensive rewrite"
+        "repo-wide", "bulk edit", "extensive rewrite",
+        "codemod", "migrate", "migration", "port to", "dependency upgrade",
+        "scaffold"
       ]
     },
     {
@@ -20,7 +22,9 @@
       "keywords": [
         "scan", "checklist", "lookup", "classif", "risk audit", "narrow",
         "simple check", "quick check", "high-volume", "repetitive",
-        "grep", "find files"
+        "grep", "find files",
+        "rename", "typo", "docstring", "boilerplate", "changelog",
+        "commit message", "reformat", "lint fix"
       ]
     },
     {
@@ -32,5 +36,5 @@
     }
   ],
   "default": "sonnet",
-  "note": "Static/heuristic only, per council decision 2026-07-28. No learning yet -- that needs eventlog usage data first. Keyword match against subagent_type + description; first rule with a hit wins. No match = no recommendation, on purpose, to avoid noisy false positives. Never blocks -- fail-open by design. Updated 2026-07-31 for the full free/local-first cascade (custom -> local -> groq -> kimi -> Claude, see CLAUDE.md): added a 'kimi' tier for long-horizon/multi-step/tool-heavy coding work that doesn't need Claude's judgment specifically -- enforced as a soft nudge only (never a deny), since Kimi is China-hosted and needs a human sensitivity check before non-Claude-required work is shelled out to it. The 'haiku' tier keywords above are the ones localmodel/enforce-hook.js hard-denies and redirects to the free local cascade (custom tier first for coding-flavored work, then fast/code/reasoning/balanced) -- 'custom' has no keyword rule of its own here because it's a *preference within* the local cascade, not a separate task-shape classification."
+  "note": "Static/heuristic only, per council decision 2026-07-28. No learning yet -- that needs eventlog usage data first. Keyword match against subagent_type + description; first rule with a hit wins. No match = no recommendation, on purpose, to avoid noisy false positives. Never blocks -- fail-open by design. Updated 2026-07-31 for the full free/local-first cascade (custom -> local -> groq -> kimi -> Claude, see CLAUDE.md): added a 'kimi' tier for long-horizon/multi-step/tool-heavy coding work that doesn't need Claude's judgment specifically -- enforced as a soft nudge only (never a deny), since Kimi is China-hosted and needs a human sensitivity check before non-Claude-required work is shelled out to it. The 'haiku' tier keywords above are the ones localmodel/enforce-hook.js hard-denies and redirects to the free local cascade (custom tier first for coding-flavored work, then fast/code/reasoning/balanced) -- 'custom' has no keyword rule of its own here because it's a *preference within* the local cascade, not a separate task-shape classification. Updated 2026-08-30 from the first real captured usage data (modelweighter/metrics.jsonl + pending.jsonl, 18 captures): (1) removed 'council' from the opus tier -- the council skill deliberately assigns DIFFERENT models per seat for perspective diversity, so forcing every seat to opus defeats the skill's own design; empirically council ran on sonnet x4 and haiku x2, and all three graded outcomes came back 'worked', so opus was never load-bearing for it. It now falls through to the sonnet default, matching observed reality. (2) Added mechanical-edit keywords (rename/typo/docstring/boilerplate/changelog/commit message/reformat/lint fix) to the haiku tier per the standing local-first preference for narrow mechanical code fixes -- note this tier is HARD-DENIED to free local by localmodel/enforce-hook.js, not merely nudged, so only genuinely mechanical shapes belong here. (3) Added long-horizon coding keywords (codemod/migrate/migration/port to/dependency upgrade/scaffold) to the kimi tier, which is nudge-only. Deliberately NOT added: code review, security review, test writing, debugging, adversarial-review/red-team -- all need real judgment about correctness, so they stay on the sonnet default rather than being pushed down-tier. Open item, unresolved: a 'scan' capture on 2026-08-12 ran on sonnet for 61,848 tokens despite 'scan' being in the hard-denied haiku tier; cause not determined (possible [claude-required] override, a non-Agent code path, or a legitimately-large job that the generic word 'scan' mis-tags). Bare 'scan' is the most false-positive-prone keyword in a hard-deny tier -- revisit if it bites again."
 }
