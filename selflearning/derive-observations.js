@@ -83,16 +83,52 @@ function subagentTranscriptFor(subagentsDir, toolUseId) {
   return null;
 }
 
-// Signal: did the subagent's own transcript hit a tool error?
+// Signal: did the subagent's own transcript hit a tool error it never came
+// back from?
+//
+// Deliberately NOT "did any tool_result have is_error" -- that was the
+// original rule and it was wrong. A long agentic run routinely errors and
+// recovers (a bad path, a transient 503, a mangled arg) and then goes on to
+// finish the job correctly; that is competence, not failure. Because the
+// aggregator below treats ANY failed-polarity signal as decisive, an
+// over-broad error test doesn't just add noise -- it silently overrides real
+// positive evidence like `edits-kept` and pre-fills "failed" on runs that
+// actually worked. Grading from those suggestions would poison the belief
+// store with exactly the opposite of the truth.
+//
+// Verified against real transcripts 2026-08-30: all 5 pending captures this
+// rule had flagged errored mid-run (3/68, 2/65, 6/76 tool results) and then
+// continued for another 36-78 entries to completion. Every one was a false
+// positive under the old rule.
+//
+// So we flag only errors that look TERMINAL:
+//   - the run's final tool_result is itself an error (it stopped there), or
+//   - errors dominate the run (>50% of tool results), i.e. systemic thrash
+//     rather than an incidental stumble.
+// Anything else is treated as recovered and emits no signal at all -- an
+// honest "no opinion," consistent with this module's rule that it never
+// guesses.
+const ERROR_DOMINANCE_THRESHOLD = 0.5;
+
 function detectTurnErrored(subagentTranscript) {
   if (!subagentTranscript) return false;
+
+  const results = [];
   for (const e of subagentTranscript) {
     if (e.type !== 'user' || !e.message || !Array.isArray(e.message.content)) continue;
     for (const block of e.message.content) {
-      if (block.type === 'tool_result' && block.is_error) return true;
+      if (block.type === 'tool_result') results.push(Boolean(block.is_error));
     }
   }
-  return false;
+
+  if (results.length === 0) return false;
+
+  // Terminal: the last thing the subagent did was fail.
+  if (results[results.length - 1]) return true;
+
+  // Systemic: most of the run was errors, so "recovered" isn't credible.
+  const errorCount = results.filter(Boolean).length;
+  return errorCount / results.length > ERROR_DOMINANCE_THRESHOLD;
 }
 
 // Signal: was a task with the same taskKeyword + subagent_type spawned again
