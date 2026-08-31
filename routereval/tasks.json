@@ -1,0 +1,126 @@
+{
+  "note": "Eval set for the haiku tier -- the keywords that localmodel/enforce-hook.js HARD-DENIES to a free local model. Those tasks run unsupervised with no human in the loop, so they are the only routing decisions where being wrong is silent and automatic. That makes them the highest-value thing to measure first. The seven mechanical-edit keywords (rename/typo/docstring/commit message/boilerplate/reformat/lint fix) were added to that tier on 2026-08-30 on judgment alone, with zero supporting evidence -- this set exists first and foremost to check whether that change was safe.",
+  "tasks": [
+    {
+      "id": "rename-var",
+      "keyword": "rename",
+      "prompt": "Rename the variable `usr` to `user` in this Python code. Output only the corrected code, no explanation.\n\ndef greet(usr):\n    return \"hi \" + usr",
+      "grader": {
+        "type": "all",
+        "of": [
+          { "type": "contains", "value": ["def greet(user)", "user"] },
+          { "type": "notContains", "value": ["usr"] }
+        ]
+      }
+    },
+    {
+      "id": "fix-typo",
+      "keyword": "typo",
+      "prompt": "Fix the spelling typo in this sentence. Output only the corrected sentence, nothing else.\n\nThe functoin returns a list of records.",
+      "grader": {
+        "type": "all",
+        "of": [
+          { "type": "contains", "value": ["function"] },
+          { "type": "notContains", "value": ["functoin"] },
+          { "type": "maxWords", "value": 15 }
+        ]
+      }
+    },
+    {
+      "id": "add-docstring",
+      "keyword": "docstring",
+      "prompt": "Add a one-line docstring to this Python function. Output only the code.\n\ndef add(a, b):\n    return a + b",
+      "grader": {
+        "type": "all",
+        "of": [
+          { "type": "contains", "value": ["def add(a, b)", "return a + b"] },
+          { "type": "regex", "value": "(\"\"\"|''')" }
+        ]
+      }
+    },
+    {
+      "id": "commit-message",
+      "keyword": "commit message",
+      "prompt": "Write a single-line conventional commit message for this change: fixed a null pointer crash in the login handler. Output only the commit message line, nothing else.",
+      "grader": {
+        "type": "all",
+        "of": [
+          { "type": "regex", "value": "^\\s*(feat|fix|docs|chore|refactor|test|perf|style)(\\([^)]+\\))?:\\s+\\S", "flags": "im" },
+          { "type": "maxLines", "value": 2 }
+        ]
+      }
+    },
+    {
+      "id": "boilerplate-json",
+      "keyword": "boilerplate",
+      "prompt": "Output a minimal valid package.json for a project named \"demo\" at version 1.0.0 with no dependencies. Output only raw JSON, no markdown fences, no explanation.",
+      "grader": {
+        "type": "all",
+        "of": [
+          { "type": "json" },
+          { "type": "contains", "value": ["demo", "1.0.0"] }
+        ]
+      }
+    },
+    {
+      "id": "reformat-to-json",
+      "keyword": "reformat",
+      "prompt": "Convert this to a raw JSON object. Output only JSON, no markdown fences, no explanation.\n\nname: alice\nage: 30\ncity: boston",
+      "grader": {
+        "type": "all",
+        "of": [
+          { "type": "json" },
+          { "type": "contains", "value": ["alice", "30", "boston"] }
+        ]
+      }
+    },
+    {
+      "id": "lint-fix-unused",
+      "keyword": "lint fix",
+      "prompt": "Remove the unused variable to fix the lint error. Output only the corrected JavaScript, no explanation.\n\nfunction total(items) {\n  const unused = 42;\n  return items.length;\n}",
+      "grader": {
+        "type": "all",
+        "of": [
+          { "type": "contains", "value": ["return items.length"] },
+          { "type": "notContains", "value": ["unused", "42"] }
+        ]
+      }
+    },
+    {
+      "id": "classify-sentiment",
+      "keyword": "classif",
+      "prompt": "Classify the sentiment of this review as exactly one word, either positive or negative. Output only that one word.\n\n\"This product broke after two days and support ignored me.\"",
+      "grader": {
+        "type": "all",
+        "of": [
+          { "type": "regex", "value": "negative", "flags": "i" },
+          { "type": "maxWords", "value": 3 }
+        ]
+      }
+    },
+    {
+      "id": "lookup-extract",
+      "keyword": "lookup",
+      "prompt": "From the text below, output only the port number and nothing else.\n\nThe service binds to 0.0.0.0 on port 8443 using TLS.",
+      "grader": {
+        "type": "all",
+        "of": [
+          { "type": "contains", "value": ["8443"] },
+          { "type": "maxWords", "value": 3 }
+        ]
+      }
+    },
+    {
+      "id": "checklist-extract",
+      "keyword": "checklist",
+      "prompt": "List only the file names mentioned below, one per line, nothing else.\n\nWe changed auth.js and then updated config.yaml before touching README.md.",
+      "grader": {
+        "type": "all",
+        "of": [
+          { "type": "contains", "value": ["auth.js", "config.yaml", "README.md"] },
+          { "type": "maxLines", "value": 4 }
+        ]
+      }
+    }
+  ]
+}
