@@ -101,10 +101,31 @@ function recommendTier(taskKeyword) {
   };
 }
 
+// Every taskKeyword that currently has at least one PROMOTED belief.
+//
+// Exists because the hook's keyword matching was originally sourced only from
+// the static model-routing.json table, which silently coupled the learned
+// layer to the static one: if a keyword is removed from the static table (a
+// legitimate thing to do -- see "council" being dropped from the opus tier on
+// 2026-08-30), its hard-won promoted beliefs became unreachable, because the
+// hook returned early on "no static keyword match" before ever consulting
+// them. Learned data should be able to outlive the static rule that seeded
+// it. Callers use this to match against keywords the static table no longer
+// knows about.
+function promotedKeywords() {
+  const out = new Set();
+  for (const belief of selflearning.listBeliefs('promoted')) {
+    const parsed = parseBeliefName(belief.name);
+    if (parsed) out.add(parsed.taskKeyword);
+  }
+  return [...out];
+}
+
 module.exports = {
   metricsLogPath,
   beliefName,
   parseBeliefName,
   recordOutcome,
   recommendTier,
+  promotedKeywords,
 };

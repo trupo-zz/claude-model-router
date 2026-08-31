@@ -25,7 +25,7 @@
 // says.
 const fs = require('fs');
 const path = require('path');
-const { recommendTier } = require('./lib');
+const { recommendTier, promotedKeywords } = require('./lib');
 
 function readStdin() {
   return new Promise((resolve) => {
@@ -59,6 +59,29 @@ async function main() {
         staticTier = rule.tier;
         matchedKeyword = hit;
         break;
+      }
+    }
+
+    // A keyword can have a promoted belief but no longer appear in the static
+    // table (keywords get retired as the policy is tuned). Without this pass,
+    // the learned layer is silently gated behind the static one and those
+    // beliefs can never fire again -- see promotedKeywords() in lib.js.
+    // Longest match wins, so a specific learned keyword beats a shorter
+    // substring of it.
+    // Guarded separately from the outer catch on purpose: this is the only
+    // step that reads the belief store off disk. If that read fails, we want
+    // to degrade to static-table-only behavior (fail open to the *existing*
+    // nudge), not lose the static nudge too by unwinding to the outer
+    // handler. Silent by design -- a hook must never write to stdout except
+    // its own JSON protocol.
+    if (!matchedKeyword) {
+      try {
+        const learnedMatch = promotedKeywords()
+          .filter((kw) => typeof kw === 'string' && kw && haystack.includes(kw))
+          .sort((a, b) => b.length - a.length)[0];
+        if (learnedMatch) matchedKeyword = learnedMatch; // staticTier stays null
+      } catch {
+        // belief store unavailable/corrupt -- fall through to static behavior
       }
     }
 
