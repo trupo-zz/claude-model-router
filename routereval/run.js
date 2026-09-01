@@ -40,46 +40,9 @@ try {
   process.exit(1);
 }
 
-// Local models habitually wrap output in markdown fences even when told not
-// to. Stripping them is fair normalization, not grading leniency -- the fence
-// is a presentation artifact, and a caller piping this output would strip it
-// too. Anything beyond this (trimming prose, picking the "best" line) would be
-// grading leniency and is deliberately not done.
-function stripFences(text) {
-  if (typeof text !== 'string') return '';
-  const fenced = text.match(/```[a-zA-Z0-9_-]*\s*\n([\s\S]*?)```/);
-  return (fenced ? fenced[1] : text).trim();
-}
-
-// Strips ONE pair of matching quotes that wraps the entire output.
-//
-// FULL DISCLOSURE, because changing a grader/normalizer after seeing a failure
-// is an eval anti-pattern and must not happen silently: this was added on
-// 2026-08-31 *after* the first sweep, in response to `commit-message` scoring
-// 0/3 on both tiers. The models emitted a structurally correct conventional
-// commit -- "Fix: Null Pointer Crash in Login Handler" -- wrapped in quotes,
-// which no ^-anchored pattern can match.
-//
-// The justification for treating it as normalization rather than leniency is
-// that a fully-enclosing quote pair is a presentation wrapper of the same
-// class as the markdown fence already stripped above, and the run is scored
-// both ways (see --strict) so the looser number can never quietly replace the
-// stricter one. It only fires when the FIRST and LAST characters are the same
-// quote mark, so an interior quote is never touched.
-//
-// This does NOT make the original finding go away: an output that needs
-// unwrapping before it can be piped into `git commit -m` is still a real
-// instruction-following miss, and that is reported separately.
-function stripWrappingQuotes(text) {
-  if (typeof text !== 'string' || text.length < 2) return text;
-  const t = text.trim();
-  const first = t[0];
-  const last = t[t.length - 1];
-  if ((first === '"' || first === "'" || first === '`') && last === first) {
-    return t.slice(1, -1).trim();
-  }
-  return t;
-}
+// Normalization lives in normalize.js so the runtime cascade applies the exact
+// same rules -- see that file for why each one is normalization and not leniency.
+const { stripFences, stripWrappingQuotes } = require("./normalize");
 
 function parseArgs(argv) {
   const args = { tiers: DEFAULT_TIERS, trials: DEFAULT_TRIALS, record: false, keyword: null, strict: false };
