@@ -50,6 +50,18 @@ pairings actually work, instead of trusting the static policy forever.
  for that keyword, from then on
 ```
 
+### The three mechanisms
+
+Routing guidance distinguishes three, in increasing accuracy and cost: **pre-request rules**
+are cheapest, **at-inference cascades** most accurate, **post-response retry** the safety net.
+This repo now implements the first and third:
+
+| Mechanism | Where | What it does |
+|---|---|---|
+| Pre-request rules | `modelrouting/` + `modelweighter/` | Keyword → tier, nudged or hard-denied before the call |
+| Post-response retry | `cascade/` | Runs cheap, **checks the answer**, retries, escalates, and fails loudly |
+| Measurement | `routereval/` | Says which keywords a free tier can actually handle, with numbers |
+
 ### The pieces
 
 - **`modelrouting/`** — the static policy. `model-routing.json` maps task keywords to tiers
@@ -66,6 +78,15 @@ pairings actually work, instead of trusting the static policy forever.
 - **`selflearning/`** — a generic Beta-Bernoulli belief store (`lib.js`) plus
   `derive-observations.js`, which turns graded pending captures into belief updates. Not
   specific to model routing — it's a reusable "grade an outcome, update a belief" primitive.
+
+- **`routereval/`** — the eval set. Measures whether a free local tier can actually
+  handle a given keyword (pass^k bar, deterministic graders). Owns the grading and
+  normalization primitives that `cascade/` reuses.
+- **`cascade/`** — the post-response retry safety net. Runs local tiers in order, checks each
+  answer, retries with a corrective nudge, and exits 2 with empty stdout when the local ladder
+  is exhausted so the caller escalates instead of trusting a wrong answer.
+- **`localmodel/enforce-hook.js`** — the hard-deny half: blocks haiku-tier work from spawning
+  a Claude subagent and points it at `cascade/`. Has a `[claude-required]` escape hatch.
 
 ## Grading loop
 
